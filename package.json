@@ -18,6 +18,10 @@
   "homepage": "https://github.com/itenium-be/confac-e2e#readme",
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/node": "^24.9.1"
+    "@types/node": "^24.9.1",
+    "testcontainers": "^11.7.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }
