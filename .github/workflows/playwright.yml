@@ -77,7 +77,20 @@ jobs:
           name: playwright-report
           path: 
             playwright-report/
-            test-results/
+          retention-days: 30
+
+      - name: Upload backend log
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-log
+          path: confac/backend/backend.log
+          retention-days: 30
+
+      - name: Upload frontend log
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-log
+          path: confac/frontend/frontend.log
           retention-days: 30
 
       - name: Cleanup containers
