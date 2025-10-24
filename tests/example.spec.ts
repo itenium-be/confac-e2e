@@ -11,5 +11,5 @@ test("hello world", async ({ page }) => {
   console.log("hello world");
   expect(true).toBeTruthy();
 
-  loginPage.goto();
+  await loginPage.goto();
 });

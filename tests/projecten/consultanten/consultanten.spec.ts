@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   consultantsPage = new ConsultantsPage(page);
 });
 
-test("consultant toevoegen", async () => {
+test("consultant toevoegen", async ({ page }) => {
   await consultantsPage.goto();
 
   await page.getByRole("button", { name: "Other creations" }).click();
