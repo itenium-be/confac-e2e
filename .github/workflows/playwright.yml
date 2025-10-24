@@ -40,6 +40,11 @@ jobs:
           npm ci
           cd ../frontend
           npm ci
+          
+      - name: Copy sample.env to .env
+        run: |
+          cd confac/backend
+          cp sample.env .env
 
       - name: Start confac backend and frontend
         run: |
@@ -54,6 +59,8 @@ jobs:
           cd confac/backend
           node ./public/faker/index.js   
         shell: bash
+        continue-on-error: true
+
 
       - name: Install test dependencies
         run: npm ci
