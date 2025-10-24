@@ -1,131 +1,101 @@
 import { Locator, Page } from "playwright";
 import { BasePage } from "../BasePage";
+import { CreateComponent } from "../../ccomponents/CreateComponent";
 
 export class ConsultantsPage extends BasePage {
-  readonly otherCreationsButton: Locator;
-  readonly newConsultantLink: Locator;
-  readonly firstNameInput: Locator;
-  readonly nameInput: Locator;
-  readonly emailInput: Locator;
-  readonly telephoneInput: Locator;
-  readonly accountingCodeInput: Locator;
-  readonly saveButton: Locator;
-  readonly searchTextbox: Locator;
+  createComponent: CreateComponent;
+
+  createConsultantButton: Locator;
+  searchInput: Locator;
+  inactiveToggle: Locator;
+  aanpassenButton: Locator;
+  deleteButton: Locator;
 
   constructor(page: Page, url: string = "/consultants") {
     super(page, "/consultants");
 
-    this.otherCreationsButton = page.getByRole("button", {
-      name: "Other creations",
-    });
-    this.newConsultantLink = page.getByRole("link", {
-      name: "Nieuwe consultant",
-    });
-    this.firstNameInput = page.getByTestId("firstName");
-    this.nameInput = page.getByTestId("name");
-    this.emailInput = page.getByTestId("email");
-    this.telephoneInput = page.getByTestId("telephone");
-    this.accountingCodeInput = page.getByTestId("accountingCode");
-    this.saveButton = page.getByRole("button", { name: "Bewaren" });
-    this.searchTextbox = page.getByRole("textbox", { name: "Zoeken" });
+    this.createComponent = new CreateComponent(page);
+
+    this.createConsultantButton = page.getByTestId("add");
+    this.searchInput = page.getByRole("textbox", { name: "Zoeken" });
+    this.inactiveToggle = page.getByText("Toon inactieve");
+    this.aanpassenButton = page.getByRole("button", { name: "" });
+    this.deleteButton = page.getByRole("button", { name: "" });
   }
 
   /**
-   * Got to consultants page.
+   * Navigate to consultants page
    */
-  async goto() {
+  async goto(): Promise<void> {
     await super.goto();
   }
 
-    /**
-   * Create a new consultant with the provided details. (E2E)
-   * @param firstName first name of the consultant
-   * @param name last name / family name
-   * @param email email address
-   * @param telephone telephone number
-   * @param accountingCode accounting code string
+  /**
+   * Click the button to create a new consultant
    */
-  async addConsultant(
-    firstName: string,
-    name: string,
-    email: string,
-    telephone: string,
-    accountingCode: string
-  ): Promise<void> {
-    await this.setFirstName(firstName);
-    await this.setName(name);
-    await this.setEmail(email);
-    await this.setTelephone(telephone);
-    await this.setAccountingCode(accountingCode);
-    await this.clickSave();
-  }
-
-
-    /**
-   * Set the first name input.
-   * @param firstName value to type into the firstName field
-   */
-  async setFirstName(firstName: string): Promise<void> {
-    await this.firstNameInput.click();
-    await this.firstNameInput.fill(firstName);
+  async clickCreateConsultant(): Promise<void> {
+    await this.createConsultantButton.click();
   }
 
   /**
-   * Set the name input.
-   * @param name value to type into the name field
+   * Search for a consultant
+   * @param searchTerm - Text to search for
    */
-  async setName(name: string): Promise<void> {
-    await this.nameInput.click();
-    await this.nameInput.fill(name);
+  async search(searchTerm: string): Promise<void> {
+    await this.searchInput.click();
+    await this.searchInput.fill(searchTerm);
   }
 
   /**
-   * Set the email input.
-   * @param email value to type into the email field
+   * Toggle showing inactive consultants
    */
-  async setEmail(email: string): Promise<void> {
-    await this.emailInput.click();
-    await this.emailInput.fill(email);
+  async toggleInactiveConsultants(): Promise<void> {
+    await this.inactiveToggle.click();
   }
 
   /**
-   * Set the telephone input.
-   * @param telephone value to type into the telephone field
+   * Click the edit button for a consultant
    */
-  async setTelephone(telephone: string): Promise<void> {
-    await this.telephoneInput.click();
-    await this.telephoneInput.fill(telephone);
+  async clickEdit(row: number = 0): Promise<void> {
+    await this.aanpassenButton.nth(row).click();
   }
 
   /**
-   * Set the accounting code input.
-   * @param accountingCode value to type into the accountingCode field
+   * Delete a consultant
+   * @returns Promise that resolves when confirmation dialog is handled
    */
-  async setAccountingCode(accountingCode: string): Promise<void> {
-    await this.accountingCodeInput.click();
-    await this.accountingCodeInput.fill(accountingCode);
+  async deleteConsultant(row: number = 0): Promise<void> {
+    await this.deleteButton.nth(row).click();
   }
 
   /**
-   * Click the save button.
+   * Get consultant row by name
+   * @param name - Name of the consultant to find
+   * @returns Locator for the consultant row
    */
-  async clickSave(): Promise<void> {
-    await this.saveButton.click();
+  async getConsultantRow(name: string): Promise<Locator> {
+    return this.page.getByRole("row", { name: new RegExp(name) });
   }
 
   /**
-   * Open the "Nieuwe consultant" form.
+   * Get consultant name by row index
+   * @param rowIndex row index to get the consultant name from
+   * @returns Promise<string> with the consultant name
    */
-  async openNewConsultant(): Promise<void> {
-    await this.newConsultantLink.click();
+  async getConsultantNameByRow(rowIndex: number): Promise<string> {
+    const rows = this.page.locator("table tbody tr");
+    const nameLink = rows.nth(rowIndex).locator("td a").first();
+    const name = (await nameLink.textContent()) ?? "";
+    return name.trim();
   }
 
   /**
-   * Set the search textbox.
-   * @param text text to search for
+   * Check if consultant exists in the list
+   * @param name - Name of the consultant to check
+   * @returns Promise<boolean> indicating if consultant exists
    */
-  async setSearch(text: string): Promise<void> {
-    await this.searchTextbox.click();
-    await this.searchTextbox.fill(text);
+  async consultantExists(name: string): Promise<boolean> {
+    const row = await this.getConsultantRow(name);
+    return await row.isVisible();
   }
 }

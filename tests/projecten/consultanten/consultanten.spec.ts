@@ -1,33 +1,60 @@
 import { test, expect } from "@playwright/test";
 import { ConsultantsPage } from "../../../src/pages/projecten/ConsultantsPage";
+import { CreateConsultantsPage } from "../../../src/pages/projecten/CreateConsultantsPage";
 
-//test.describe("Consultanten pagina", () => {
 let consultantsPage: ConsultantsPage;
+let createConsultantsPage: CreateConsultantsPage;
 
 test.beforeEach(async ({ page }) => {
   consultantsPage = new ConsultantsPage(page);
-});
+  createConsultantsPage = new CreateConsultantsPage(page);});
 
 test("consultant toevoegen", async ({ page }) => {
   await consultantsPage.goto();
 
-  await page.getByRole("button", { name: "Other creations" }).click();
-  await page.getByRole("link", { name: "Nieuwe consultant" }).click();
-  await page.getByTestId("firstName").click();
-  await page.getByTestId("firstName").fill("voornaam");
-  await page.getByTestId("firstName").press("Tab");
-  await page.getByTestId("name").fill("naam");
-  await page.getByTestId("name").press("Tab");
-  await page.getByTestId("email").click();
-  await page.getByTestId("email").fill("email");
-  await page.getByTestId("email").press("Tab");
-  await page.getByTestId("telephone").click();
-  await page.getByTestId("telephone").fill("nummer");
-  await page.getByTestId("accountingCode").click();
-  await page.getByTestId("accountingCode").click();
-  await page.getByTestId("accountingCode").fill("kostendrager");
+  await consultantsPage.createComponent.clickCreateNewConsultant();
+
+  await createConsultantsPage.addConsultant("first name", "name", "email", "nummer", "kostendrager");
+
   await page.getByRole("button", { name: "Bewaren" }).click();
   await page.getByRole("textbox", { name: "Zoeken" }).click();
   await page.getByRole("textbox", { name: "Zoeken" }).fill("naam");
 });
-//});
+
+test("consultant zoeken", async ({ page }) => {
+  let search = "Alanna";
+  await consultantsPage.goto();
+
+  await consultantsPage.search(search);
+  
+  expect(await consultantsPage.consultantExists(search)).toBeTruthy;
+
+
+});
+
+test("consultant verwijderen", async ({ page }) => {
+  let rowToDelete = 5;
+
+  await consultantsPage.goto();
+
+  let name = await consultantsPage.getConsultantNameByRow(rowToDelete);
+  await consultantsPage.deleteConsultant(rowToDelete);
+
+  expect(await consultantsPage.consultantExists(name)).toBeFalsy();
+
+});
+test("consultant aanpassen", async ({ page }) => {
+  let rowToUpdate = 5;
+  let newName = "Aangepaste voornaam";
+  
+  await consultantsPage.goto();
+  
+  let name = await consultantsPage.getConsultantNameByRow(rowToUpdate);
+  await consultantsPage.clickEdit(5);
+
+  await createConsultantsPage.setFirstName(newName);
+  await createConsultantsPage.clickSave();
+  expect(await consultantsPage.consultantExists(newName)).toBeTruthy
+
+});
+
