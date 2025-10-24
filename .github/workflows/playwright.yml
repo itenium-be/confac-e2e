@@ -40,11 +40,11 @@ jobs:
           npm ci
           cd ../frontend
           npm ci
-          
+
       - name: Copy sample.env to .env
         run: |
           cd confac/backend
-          cp sample.env .env
+          cp .env.sample .env
 
       - name: Start confac backend and frontend
         run: |
