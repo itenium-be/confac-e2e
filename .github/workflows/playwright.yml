@@ -1,27 +1,84 @@
 name: Playwright Tests
+
 on:
   push:
     branches: [ "**" ]
   pull_request:
-    branches: [ "**"]
+    branches: [ "**" ]
+
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - uses: actions/checkout@v4
+      - name: Checkout confac repo
+        uses: actions/checkout@v4
+        with:
+          repository: itenium-be/confac
+          path: confac
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Start MongoDB
+        run: |
+          docker volume create mongodata
+          docker run -d \
+            -p 27017:27017 \
+            -e MONGO_INITDB_ROOT_USERNAME=admin \
+            -e MONGO_INITDB_ROOT_PASSWORD=pwd \
+            -v mongodata:/data/db \
+            --name confac-mongo \
+            mongo:3.6.3
+
+      - name: Install confac dependencies
+        run: |
+          cd confac/backend
+          npm ci
+          cd ../frontend
+          npm ci
+
+      - name: Start confac backend and frontend
+        run: |
+          cd confac/backend
+          nohup npm start > backend.log 2>&1 &
+          cd ../frontend
+          nohup npm start > frontend.log 2>&1 &
+        shell: bash
+
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/health >/dev/null; then
+              echo "Backend is up!"
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Install test dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Cleanup containers
+        if: always()
+        run: |
+          docker stop confac-mongo || true
+          docker rm confac-mongo || true
+          docker volume rm mongodata || true
