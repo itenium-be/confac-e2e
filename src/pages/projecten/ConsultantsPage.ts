@@ -30,10 +30,21 @@ export class ConsultantsPage extends BasePage {
     this.searchTextbox = page.getByRole("textbox", { name: "Zoeken" });
   }
 
+  /**
+   * Got to consultants page.
+   */
   async goto() {
     await super.goto();
   }
 
+    /**
+   * Create a new consultant with the provided details. (E2E)
+   * @param firstName first name of the consultant
+   * @param name last name / family name
+   * @param email email address
+   * @param telephone telephone number
+   * @param accountingCode accounting code string
+   */
   async addConsultant(
     firstName: string,
     name: string,
@@ -41,14 +52,80 @@ export class ConsultantsPage extends BasePage {
     telephone: string,
     accountingCode: string
   ): Promise<void> {
-    //await this.otherCreationsButton.click();
-    //await this.newConsultantLink.click();
+    await this.setFirstName(firstName);
+    await this.setName(name);
+    await this.setEmail(email);
+    await this.setTelephone(telephone);
+    await this.setAccountingCode(accountingCode);
+    await this.clickSave();
+  }
+
+
+    /**
+   * Set the first name input.
+   * @param firstName value to type into the firstName field
+   */
+  async setFirstName(firstName: string): Promise<void> {
     await this.firstNameInput.click();
     await this.firstNameInput.fill(firstName);
-    await this.firstNameInput.press("Tab");
+  }
+
+  /**
+   * Set the name input.
+   * @param name value to type into the name field
+   */
+  async setName(name: string): Promise<void> {
+    await this.nameInput.click();
     await this.nameInput.fill(name);
-    await this.nameInput.press("Tab");
+  }
+
+  /**
+   * Set the email input.
+   * @param email value to type into the email field
+   */
+  async setEmail(email: string): Promise<void> {
     await this.emailInput.click();
     await this.emailInput.fill(email);
+  }
+
+  /**
+   * Set the telephone input.
+   * @param telephone value to type into the telephone field
+   */
+  async setTelephone(telephone: string): Promise<void> {
+    await this.telephoneInput.click();
+    await this.telephoneInput.fill(telephone);
+  }
+
+  /**
+   * Set the accounting code input.
+   * @param accountingCode value to type into the accountingCode field
+   */
+  async setAccountingCode(accountingCode: string): Promise<void> {
+    await this.accountingCodeInput.click();
+    await this.accountingCodeInput.fill(accountingCode);
+  }
+
+  /**
+   * Click the save button.
+   */
+  async clickSave(): Promise<void> {
+    await this.saveButton.click();
+  }
+
+  /**
+   * Open the "Nieuwe consultant" form.
+   */
+  async openNewConsultant(): Promise<void> {
+    await this.newConsultantLink.click();
+  }
+
+  /**
+   * Set the search textbox.
+   * @param text text to search for
+   */
+  async setSearch(text: string): Promise<void> {
+    await this.searchTextbox.click();
+    await this.searchTextbox.fill(text);
   }
 }

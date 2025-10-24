@@ -36,7 +36,9 @@ jobs:
 
       - name: Install confac dependencies
         run: |
-          cd confac/backend
+          cd confac/backend  
+          cp .env.sample .env
+          echo "MONGO_URI=mongodb://admin:pwd@localhost:27017" >> .env
           npm ci
           cd ../frontend
           npm ci
@@ -48,17 +50,6 @@ jobs:
           cd ../frontend
           nohup npm start > frontend.log 2>&1 &
         shell: bash
-
-      - name: Wait for backend to be ready
-        run: |
-          echo "Waiting for backend..."
-          for i in {1..30}; do
-            if curl -s http://localhost:3000/health >/dev/null; then
-              echo "Backend is up!"
-              break
-            fi
-            sleep 5
-          done
 
       - name: Install test dependencies
         run: npm ci
