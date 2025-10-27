@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ConsultantsPage } from "../../../src/pages/projecten/ConsultantsPage";
 import { CreateConsultantsPage } from "../../../src/pages/projecten/CreateConsultantsPage";
-import { GenericContainer } from "testcontainers";
 import { setupTestEnvironment, teardownTestEnvironment } from "../../../test-setup/setup";
 
 let container;

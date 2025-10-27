@@ -2,7 +2,7 @@ import test, { test as setup, expect } from '@playwright/test';
 import path from 'path';
 
 import { setupTestEnvironment, teardownTestEnvironment } from '../../test-setup/setup';
-import { LoginPage } from '../../src/pages/loginPage';
+import { LoginPage } from '../../src/pages/LoginPage';
 
 const authFile = path.join(__dirname, '../../playwright/.auth/user.json');
 let login: LoginPage;
