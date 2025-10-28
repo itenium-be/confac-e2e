@@ -39,9 +39,11 @@ export async function setupTestEnvironment() {
   const mongoPort = mongoContainer.getMappedPort(27017);
   const mongoUrl = `mongodb://${mongoContainer.getHost()}:${mongoPort}/confac`;
 
+  console.log("Starting Backend process");
+
   backendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "backend"),
-    stdio: ["inherit", "pipe", "pipe"], 
+    stdio: ["inherit", "pipe", "pipe"],
     shell: true,
     env: {
       ...process.env,
@@ -50,12 +52,16 @@ export async function setupTestEnvironment() {
     },
   });
   console.log("Backend process started");
+  console.log("Starting seed process");
 
   seedProcess = spawn("cd backend/public && node ./faker/index.j", {
-    shell: true, 
-    stdio: "inherit", 
+    shell: true,
+    stdio: "inherit",
     env: process.env,
   });
+  console.log("Seed process finished");
+
+  console.log("Frontend process started");
 
   frontendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "frontend"),
