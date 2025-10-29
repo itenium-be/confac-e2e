@@ -118,6 +118,7 @@ export class CreateKlantPage extends BasePage {
   async straatEnNummerInvullen(straatEnNummer: string) {
     await this.straatEnNummerInput.fill(straatEnNummer);
   }
+
   /**
    * enter the postcode
    * @param postcode string to enter
@@ -125,11 +126,6 @@ export class CreateKlantPage extends BasePage {
   async postcodeInvullen(postcode: string) {
     await this.PostcodeInput.fill(postcode);
   }
-  /**
-   *
-   * @param stad
-
-   */
 
   /**
    * enter the stad
@@ -165,6 +161,7 @@ export class CreateKlantPage extends BasePage {
   async contactEmailInvullen(contactEmail: string) {
     await this.contactEmailInput.fill(contactEmail);
   }
+
   /**
    * telefoon nr invullen
    * @param telefoonNr string to enter
@@ -172,6 +169,7 @@ export class CreateKlantPage extends BasePage {
   async telefoonNrInvullen(telefoonNr: string) {
     await this.telefoonNrInput.fill(telefoonNr);
   }
+  
   /**
    * select the given taal from the taal dropdown
    * @param taal string to select

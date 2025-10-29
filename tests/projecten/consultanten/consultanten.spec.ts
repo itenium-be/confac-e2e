@@ -3,9 +3,6 @@ import { ConsultantsPage } from "../../../src/pages/projecten/ConsultantsPage";
 import { CreateConsultantsPage } from "../../../src/pages/projecten/CreateConsultantsPage";
 import { setupTestEnvironment, teardownTestEnvironment } from "../../../test-setup/setup";
 
-let container;
-
-
 let consultantsPage: ConsultantsPage;
 let createConsultantsPage: CreateConsultantsPage;
 
@@ -42,8 +39,6 @@ test("consultant zoeken", async ({ page }) => {
   await consultantsPage.search(search);
   
   expect(await consultantsPage.consultantExists(search)).toBeTruthy;
-
-
 });
 
 test("consultant verwijderen", async ({ page }) => {
@@ -55,8 +50,8 @@ test("consultant verwijderen", async ({ page }) => {
   await consultantsPage.deleteConsultant(rowToDelete);
 
   expect(await consultantsPage.consultantExists(name)).toBeFalsy();
-
 });
+
 test("consultant aanpassen", async ({ page }) => {
   let rowToUpdate = 5;
   let newName = "Aangepaste voornaam";
@@ -69,6 +64,4 @@ test("consultant aanpassen", async ({ page }) => {
   await createConsultantsPage.setFirstName(newName);
   await createConsultantsPage.clickSave();
   expect(await consultantsPage.consultantExists(newName)).toBeTruthy
-
 });
-
