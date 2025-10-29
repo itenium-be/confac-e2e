@@ -38,8 +38,12 @@ export class CreateKlantPage extends BasePage {
       .nth(2);
     this.klantInput = page.getByTestId("name");
     this.btwInput = page.getByTestId("btw");
-    this.typeDropdown = page.locator('.react-select__value-container.react-select__value-container--is-multi > .react-select__input-container').first()
-    this.typeDropdownOptions = page.locator("#react-select-4-listbox")
+    this.typeDropdown = page
+      .locator(
+        ".react-select__value-container.react-select__value-container--is-multi > .react-select__input-container"
+      )
+      .first();
+    this.typeDropdownOptions = page.locator("#react-select-4-listbox");
     this.straatEnNummerInput = page.getByTestId("address");
     this.PostcodeInput = page.getByTestId("postalCode");
     this.stadInput = page.getByTestId("city");
@@ -48,7 +52,7 @@ export class CreateKlantPage extends BasePage {
         ".col-lg-3 > .form-group > .css-b62m3t-container > .react-select__control > .react-select__value-container > .react-select__input-container"
       )
       .first();
-          this.landDropdownOptions = page.locator("#react-select-5-listbox")
+    this.landDropdownOptions = page.locator("#react-select-5-listbox");
 
     this.contactGegevensInput = page.getByTestId("contact");
     this.contactEmailInput = page.getByTestId("contactEmail");
@@ -63,28 +67,30 @@ export class CreateKlantPage extends BasePage {
   }
 
   /**
-   *
-   * @param btwNummer
-   * @returns
+   * enter the given btw number (in the initial create page)
+   * @param btwNummer string to repsrent the btw nummer
    */
   async btwNummerInvullen(btwNummer: string) {
     await this.btwNummerInput.fill(btwNummer);
   }
   /**
-   *
-   * @returns
+   * Click the verder aanvullen button
    */
   async ClickKlantVerderAanvullen() {
     await this.klantVerderAanvullenButton.click();
   }
-  /** */
+
+  /**
+   * enter the given klant name
+   * @param klantNaam name to enter
+   */
   async klantNaamInvullen(klantNaam: string) {
     await this.klantInput.fill(klantNaam);
   }
 
   /**
-   *
-   * @param btw
+   * enter the btw number (on the full creation page)
+   * @param btw string to represent the btw number
    * @returns
    */
   async btwInvullen(btw: string) {
@@ -94,150 +100,91 @@ export class CreateKlantPage extends BasePage {
   }
 
   /**
-   *
-   * @param type
-   * @returns
+   * select the given type from the type dropdown
+   * opens the dropdown and selects from the given options
+   * @param type see @KlantTypes enum
    */
   async typeDropdownSelecteren(type: klantTypes) {
     await this.typeDropdown.click();
-    await this.typeDropdownOptions.locator('.react-select__option', { hasText: type }).click();
+    await this.typeDropdownOptions
+      .locator(".react-select__option", { hasText: type })
+      .click();
   }
 
-
   /**
-   *
-   * @param straatEnNummer
-   * @returns
+   * enter the straat en nummer input
+   * @param straatEnNummer string to enter
    */
   async straatEnNummerInvullen(straatEnNummer: string) {
     await this.straatEnNummerInput.fill(straatEnNummer);
-
   }
   /**
-   *
-   * @param postcode
-   * @returns
+   * enter the postcode
+   * @param postcode string to enter
    */
   async postcodeInvullen(postcode: string) {
     await this.PostcodeInput.fill(postcode);
-
-    return this;
   }
   /**
    *
    * @param stad
-   * @returns
+
+   */
+
+  /**
+   * enter the stad
+   * @param stad string to enter
    */
   async stadInvullen(stad: string) {
     await this.stadInput.fill(stad);
-
-    return this;
   }
 
   /**
-   *
-   * @param land
-   * @returns
+   * select the given land from the land dropdown
+   * @param land land to select
    */
   async landDropdownSelecteren(land: string) {
     await this.landDropdown.click();
-    await this.landDropdownOptions.locator('.react-select__option', { hasText: land }).click();
-
-    return this;
+    await this.landDropdownOptions
+      .locator(".react-select__option", { hasText: land })
+      .click();
   }
 
   /**
-   *
-   * @param contactGegevens
-   * @returns
+   * contact gegevens invullen
+   * @param contactGegevens string to enter
    */
   async contactGegevensInvullen(contactGegevens: string) {
     await this.contactGegevensInput.fill(contactGegevens);
-
-    return this;
   }
 
   /**
-   *
-   * @param contactEmail
-   * @returns
+   * contact email invullen
+   * @param contactEmail string to enter
    */
   async contactEmailInvullen(contactEmail: string) {
     await this.contactEmailInput.fill(contactEmail);
-
-    return this;
   }
   /**
-   *
-   * @param telefoonNr
-   * @returns
+   * telefoon nr invullen
+   * @param telefoonNr string to enter
    */
   async telefoonNrInvullen(telefoonNr: string) {
     await this.telefoonNrInput.fill(telefoonNr);
-
-    return this;
   }
   /**
-   *
-   * @param taal
-   * @returns
+   * select the given taal from the taal dropdown
+   * @param taal string to select
    */
   async taalDropdownSelecteren(taal: string) {
     await this.taalDropdown.click();
     await this.page.getByText(taal).click();
-
-    return this;
   }
 
+  /**
+   * click the bewaren button. Navigates back to klanten page
+   */
   async clickBewaren() {
     await this.bewarenButton.click();
-
-    return this;
   }
 }
-
-/*
-await page.getByTestId("add").click();
-await page.getByTestId("btw").click();
-await page.getByTestId("btw").fill("1");
-await page.getByTestId("btw-continue").click();
-await page.getByTestId("name").click();
-await page.getByTestId("name").fill("klant");
-await page
-  .locator("div")
-  .filter({ hasText: /^Type\(s\)$/ })
-  .nth(2)
-  .click();
-
-await page.getByRole("combobox", { name: "types" }).click();
-await page.getByTestId("address").click();
-await page.getByTestId("address").fill("straat");
-await page.getByTestId("postalCode").click();
-await page.getByTestId("postalCode").fill("postcode");
-await page.getByTestId("city").click();
-await page.getByTestId("city").fill("stad");
-await page
-  .locator(
-    ".col-lg-3 > .form-group > .css-b62m3t-container > .react-select__control > .react-select__value-container > .react-select__input-container"
-  )
-  .first()
-  .click();
-await page.getByText("België").click();
-
-await page.getByTestId("contact").click();
-await page.getByTestId("contact").fill("contact");
-await page.getByTestId("contactEmail").click();
-await page.getByTestId("contactEmail").fill("email contact");
-await page.locator("div").filter({ hasText: "Telefoon nr" }).nth(4).click();
-await page.getByTestId("telephone").fill("1");
-await page
-  .locator(
-    ".col-lg-3 > .form-group > .react-select-base > .react-select__control > .react-select__value-container > .react-select__input-container"
-  )
-  .click();
-await page.getByText("nl").click();
-
-await page
-  .locator("#rdw-wrapper-9356")
-  .getByRole("textbox", { name: "rdw-editor" })
-  .click();*/
