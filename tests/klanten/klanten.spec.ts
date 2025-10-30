@@ -35,7 +35,7 @@ test("klant toevoegen", async ({ page }) => {
   await createKlantPage.btwNummerInvullen(AlphaNumericHelper.randomBtw());
   await createKlantPage.ClickKlantVerderAanvullen();
   await createKlantPage.klantNaamInvullen("test" + AlphaNumericHelper.randomName());
-  //await createKlantPage.btwInvullen("btw nummer");
+  //await createKlantPage.btwInvullen("btw nummer"); --skipping as it is already pre filled here
   await createKlantPage.typeDropdownSelecteren(klantTypes.Eindklant);
   await createKlantPage.straatEnNummerInvullen(AlphaNumericHelper.randomStraat() + AlphaNumericHelper.randomNumeric(1));
   await createKlantPage.postcodeInvullen(AlphaNumericHelper.randomNumeric(4));
@@ -65,7 +65,7 @@ test("klant verwijderen", async ({ page }) => {
   let klantNaam = "Wyman LLC";
   await klantenPage.goto();
 
-  await klantenPage.getKlantRowbyname(klantNaam).then(async (row) => {
+  await klantenPage.getKlantRowbyName(klantNaam).then(async (row) => {
     await klantenPage.deleteKlant(row);
   });
 
@@ -78,7 +78,7 @@ test("klant aanpassen", async ({ page }) => {
   await klantenPage.goto();
 
   await klantenPage.search(klantNaam)
-  await klantenPage.getKlantRowbyname(klantNaam).then(async (row) => {
+  await klantenPage.getKlantRowbyName(klantNaam).then(async (row) => {
     await klantenPage.editKlant(row);
   });
 

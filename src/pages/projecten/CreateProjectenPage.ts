@@ -12,14 +12,19 @@ export class CreateProjectenPage extends BasePage {
   constructor(page: Page, url: string = "/projects/create") {
     super(page, url);
 
-    this.accountManagerDropdown = page.getByText(
-      "Account ManagerMaak een keuze"
-    );
-    this.consultantDropdown = page.getByText("ConsultantMaak een keuze");
-    this.eindKlantDropdown = page.getByText("EindklantMaak een keuze");
+    this.accountManagerDropdown = page
+      .locator('div.form-group:has-text("Account Manager")')
+      .locator("div.react-select__control");
+    this.consultantDropdown = page
+      .locator('div.form-group:has-text("Consultant")')
+      .locator("div.react-select__control");
+    this.eindKlantDropdown = page
+      .locator('div.form-group:has-text("Eindklant")')
+      .locator("div.react-select__control");
+
     this.startDatum = page.getByRole("textbox", { name: "Start datum" });
 
-    this.bewarenButton = page.getByRole("button", {name : "Bewaren"});
+    this.bewarenButton = page.getByRole("button", { name: "Bewaren" });
   }
 
   /**
@@ -69,13 +74,13 @@ export class CreateProjectenPage extends BasePage {
     await this.eindKlantDropdown.click();
 
     if (typeof eindKlant === "number") {
-      await this.page.locator(".react-select__option").nth(eindKlant).click();
+      await this.page.locator(".react-select__option").nth(eindKlant).click({force: true });
     } else {
       await this.page
         .locator(".react-select__option", {
           hasText: eindKlant,
         })
-        .click();
+        .click({force: true });
     }
   }
 
@@ -91,6 +96,9 @@ export class CreateProjectenPage extends BasePage {
    * Click the bewaren button
    */
   async clickBewaren() {
-    await this.bewarenButton.click();
+    await Promise.all([
+      this.page.waitForURL("**/projects"), // update pattern to […] path you expect
+      this.bewarenButton.click(),
+    ]);
   }
 }

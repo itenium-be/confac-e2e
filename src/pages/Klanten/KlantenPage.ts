@@ -83,7 +83,7 @@ export class KlantenPage extends BasePage {
    * @param klantNaam name of the klant to find
    * @returns Locator for the klant row
    */
-  async getKlantRowbyname(klantNaam: string): Promise<Locator> {
-    return this.page.getByRole("row", { name: klantNaam });
+  async getKlantRowbyName(klantNaam: string): Promise<Locator> {
+    return this.page.getByRole("row", { name: new RegExp(klantNaam) });
   }
 }
