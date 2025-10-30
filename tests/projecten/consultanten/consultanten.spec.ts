@@ -1,13 +1,24 @@
 import { test, expect } from "@playwright/test";
 import { ConsultantsPage } from "../../../src/pages/projecten/ConsultantsPage";
 import { CreateConsultantsPage } from "../../../src/pages/projecten/CreateConsultantsPage";
+import { setupTestEnvironment, teardownTestEnvironment } from "../../../test-setup/setup";
 
 let consultantsPage: ConsultantsPage;
 let createConsultantsPage: CreateConsultantsPage;
 
+test.beforeAll(async () => {
+  await setupTestEnvironment();
+});
+
+test.afterAll(async () => {
+  await teardownTestEnvironment();
+});
+
 test.beforeEach(async ({ page }) => {
   consultantsPage = new ConsultantsPage(page);
-  createConsultantsPage = new CreateConsultantsPage(page);});
+  createConsultantsPage = new CreateConsultantsPage(page);
+ 
+});
 
 test("consultant toevoegen", async ({ page }) => {
   await consultantsPage.goto();
@@ -28,8 +39,6 @@ test("consultant zoeken", async ({ page }) => {
   await consultantsPage.search(search);
   
   expect(await consultantsPage.consultantExists(search)).toBeTruthy;
-
-
 });
 
 test("consultant verwijderen", async ({ page }) => {
@@ -41,8 +50,8 @@ test("consultant verwijderen", async ({ page }) => {
   await consultantsPage.deleteConsultant(rowToDelete);
 
   expect(await consultantsPage.consultantExists(name)).toBeFalsy();
-
 });
+
 test("consultant aanpassen", async ({ page }) => {
   let rowToUpdate = 5;
   let newName = "Aangepaste voornaam";
@@ -55,6 +64,4 @@ test("consultant aanpassen", async ({ page }) => {
   await createConsultantsPage.setFirstName(newName);
   await createConsultantsPage.clickSave();
   expect(await consultantsPage.consultantExists(newName)).toBeTruthy
-
 });
-

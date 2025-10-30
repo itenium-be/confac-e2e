@@ -1,6 +1,6 @@
 import { Locator, Page } from "playwright";
 import { BasePage } from "../BasePage";
-import { CreateComponent } from "../../ccomponents/CreateComponent";
+import { CreateComponent } from "../../components/CreateComponent";
 
 export class ConsultantsPage extends BasePage {
   createComponent: CreateComponent;
@@ -12,7 +12,7 @@ export class ConsultantsPage extends BasePage {
   deleteButton: Locator;
 
   constructor(page: Page, url: string = "/consultants") {
-    super(page, "/consultants");
+    super(page, url);
 
     this.createComponent = new CreateComponent(page);
 
