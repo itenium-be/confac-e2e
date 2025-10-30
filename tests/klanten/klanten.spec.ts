@@ -7,6 +7,9 @@ import {
 import { KlantenPage } from "../../src/pages/Klanten/KlantenPage";
 import { CreateKlantPage } from "../../src/pages/Klanten/CreateKlantPage";
 import { klantTypes } from "../../src/enum/klantTypes";
+import { AlphaNumericHelper } from "../../src/utils/helpers/AlphaNumericHelper"
+
+
 
 let klantenPage: KlantenPage;
 let createKlantPage: CreateKlantPage;
@@ -29,17 +32,15 @@ test("klant toevoegen", async ({ page }) => {
 
   await klantenPage.ClickOnNieuweKlant();
 
-  await createKlantPage.btwNummerInvullen("123456789");
+  await createKlantPage.btwNummerInvullen(AlphaNumericHelper.randomBtw());
   await createKlantPage.ClickKlantVerderAanvullen();
-  await createKlantPage.klantNaamInvullen("klant naam");
-  await createKlantPage.btwInvullen("btw nummer");
+  await createKlantPage.klantNaamInvullen("test" + AlphaNumericHelper.randomName());
+  //await createKlantPage.btwInvullen("btw nummer");
   await createKlantPage.typeDropdownSelecteren(klantTypes.Eindklant);
-  await createKlantPage.straatEnNummerInvullen("straat 1");
-  await createKlantPage.postcodeInvullen("1000");
+  await createKlantPage.straatEnNummerInvullen(AlphaNumericHelper.randomStraat() + AlphaNumericHelper.randomNumeric(1));
+  await createKlantPage.postcodeInvullen(AlphaNumericHelper.randomNumeric(4));
   await createKlantPage.stadInvullen("stad");
   await createKlantPage.landDropdownSelecteren("België");
-
-  await createKlantPage.clickBewaren();
 
   const [response] = await Promise.all([
     page.waitForResponse(
@@ -72,10 +73,11 @@ test("klant verwijderen", async ({ page }) => {
 });
 
 test("klant aanpassen", async ({ page }) => {
-  let klantNaam = "Wyman LLC";
+  let klantNaam = "test";
   let updatedKlantNaam = "aangepaste klant naam";
   await klantenPage.goto();
 
+  await klantenPage.search(klantNaam)
   await klantenPage.getKlantRowbyname(klantNaam).then(async (row) => {
     await klantenPage.editKlant(row);
   });
@@ -86,3 +88,5 @@ test("klant aanpassen", async ({ page }) => {
 
   expect(await klantenPage.klantExists(updatedKlantNaam)).toBeTruthy();
 });
+
+
