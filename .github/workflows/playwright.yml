@@ -23,17 +23,6 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Start MongoDB
-        run: |
-          docker volume create mongodata
-          docker run -d \
-            -p 27017:27017 \
-            -e MONGO_INITDB_ROOT_USERNAME=admin \
-            -e MONGO_INITDB_ROOT_PASSWORD=pwd \
-            -v mongodata:/data/db \
-            --name confac-mongo \
-            mongo:3.6.3
-
       - name: Install confac dependencies
         run: |
           cd confac/backend  
@@ -45,21 +34,6 @@ jobs:
         run: |
           cd confac/backend
           cp .env.sample .env
-
-      - name: Start confac backend and frontend
-        run: |
-          cd confac/backend
-          nohup npm start > backend.log 2>&1 &
-          cd ../frontend
-          nohup npm start > frontend.log 2>&1 &
-        shell: bash
-
-      - name: inject dummy data
-        run: |
-          cd confac/backend
-          node ./public/faker/index.js   
-        shell: bash
-        continue-on-error: true
 
       - name: Install test dependencies
         run: npm ci
@@ -77,26 +51,3 @@ jobs:
           path: 
             playwright-report/
           retention-days: 30
-
-      - name: Upload backend log
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-log
-          path: confac/backend/backend.log
-          retention-days: 30
-
-      - name: Upload frontend log
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-log
-          path: confac/frontend/frontend.log
-          retention-days: 30
-
-      - name: Cleanup containers
-        if: always()
-        run: |
-          docker stop confac-mongo || true
-          docker rm confac-mongo || true
-          docker volume rm mongodata || true
