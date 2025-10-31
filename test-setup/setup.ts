@@ -9,13 +9,16 @@ let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  const candidate = path.resolve(__dirname, "../confac"); // one level higher
-  if (fs.existsSync(candidate)) {
-    return candidate;
+  const localPath = path.resolve(__dirname, "../confac");
+  const ciPath = "/confac";
+
+  if (fs.existsSync(localPath)) {
+    console.log(`🧩 Using local confac path: ${localPath}`);
+    return localPath;
   }
 
-  // fallback for local dev (monorepo)
-  return path.resolve(__dirname, "../confac");
+  console.log(`🧩 Using CI confac path: ${ciPath}`);
+  return ciPath;
 };
 
 async function globalSetup(config: FullConfig) {
