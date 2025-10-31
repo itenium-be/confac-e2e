@@ -3,6 +3,7 @@ import { ChildProcess, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { FullConfig } from "@playwright/test";
+import os from "os";
 
 let mongoContainer: StartedTestContainer | null = null;
 let backendProcess: ChildProcess | null = null;
@@ -20,6 +21,9 @@ const getAppPath = () => {
   console.log(`🧩 Using CI confac path: ${ciPath}`);
   return ciPath;
 };
+
+const isWindows = os.platform() === "win32";
+
 async function globalSetup(config: FullConfig) {
   const appPath = getAppPath();
 
@@ -30,33 +34,33 @@ async function globalSetup(config: FullConfig) {
   const mongoDb = process.env.MONGO_DB || "confac";
 
   let mongoUrl: string;
-   console.log("🧱 Starting MongoDB in Testcontainers...");
-    mongoContainer = await new GenericContainer("mongo:latest")
-      .withExposedPorts(27017)
-      .withEnvironment({
-        MONGO_INITDB_DATABASE: mongoDb,
-        MONGO_INITDB_ROOT_USERNAME: mongoUser,
-        MONGO_INITDB_ROOT_PASSWORD: mongoPass,
-      })
-      .withStartupTimeout(120_000)
-      .withWaitStrategy(Wait.forLogMessage("Waiting for connections"))
-      .start();
+  console.log("🧱 Starting MongoDB in Testcontainers...");
+  mongoContainer = await new GenericContainer("mongo:latest")
+    .withExposedPorts(27017)
+    .withEnvironment({
+      MONGO_INITDB_DATABASE: mongoDb,
+      MONGO_INITDB_ROOT_USERNAME: mongoUser,
+      MONGO_INITDB_ROOT_PASSWORD: mongoPass,
+    })
+    .withStartupTimeout(120_000)
+    .withWaitStrategy(Wait.forLogMessage("Waiting for connections"))
+    .start();
 
-    const mappedPort = mongoContainer.getMappedPort(27017);
-    mongoUrl = `mongodb://${mongoUser}:${mongoPass}@${mongoContainer.getHost()}:${mappedPort}/${mongoDb}?authSource=admin`;
+  const mappedPort = mongoContainer.getMappedPort(27017);
+  mongoUrl = `mongodb://${mongoUser}:${mongoPass}@${mongoContainer.getHost()}:${mappedPort}/${mongoDb}?authSource=admin`;
 
-    process.env.MONGO_HOST = mongoContainer.getHost();
-    process.env.MONGO_PORT = mappedPort.toString();
-    process.env.MONGODB_URI = mongoUrl;
+  process.env.MONGO_HOST = mongoContainer.getHost();
+  process.env.MONGO_PORT = mappedPort.toString();
+  process.env.MONGODB_URI = mongoUrl;
 
-    console.log(`✅ MongoDB container started at ${mongoUrl}`);
+  console.log(`✅ MongoDB container started at ${mongoUrl}`);
 
   // --- Start backend ---
   console.log("🚀 Starting backend...");
   backendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "backend"),
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
+    shell: isWindows,
     env: {
       ...process.env,
       MONGO_HOST: process.env.MONGO_HOST,
@@ -78,7 +82,7 @@ async function globalSetup(config: FullConfig) {
     const seed = spawn("node", ["./faker/index.js"], {
       cwd: path.join(appPath, "backend/public"),
       env: { ...process.env, MONGODB_URI: mongoUrl },
-      shell: true,
+      shell: isWindows,
     });
     seed.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Seed failed"))));
   });
@@ -88,7 +92,7 @@ async function globalSetup(config: FullConfig) {
   frontendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "frontend"),
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
+    shell: isWindows,
     env: {
       ...process.env,
       PORT: "3000",
@@ -108,10 +112,19 @@ async function globalSetup(config: FullConfig) {
       mongoId: mongoContainer ? mongoContainer.getId() : null,
       backendPid: backendProcess?.pid ?? null,
       frontendPid: frontendProcess?.pid ?? null,
-    }),
+    })
   );
 
   console.log("✅ Test environment ready.");
 }
 
 export default globalSetup;
+
+function runNpm(command: string, cwd: string) {
+  const isWindows = process.platform === "win32";
+  return spawn("npm", [command], {
+    cwd,
+    stdio: "inherit",
+    shell: isWindows,
+  });
+}
