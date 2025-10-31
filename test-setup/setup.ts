@@ -18,6 +18,13 @@ const getAppPath = () => {
 
 async function globalSetup(config: FullConfig) {
 
+console.log("🧭 Debugging environment...");
+console.log("Node version:", process.version);
+console.log("Current working directory:", process.cwd());
+console.log("PATH:", process.env.PATH);
+console.log("Backend directory exists?", fs.existsSync(path.join(getAppPath(), "backend")));
+console.log("npm location:", require("child_process").execSync("which npm").toString());
+
 
   const appPath = getAppPath();
   console.log(`🧩 Using confac app path: ${appPath}`);
