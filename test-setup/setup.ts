@@ -23,31 +23,23 @@ const getAppPath = () => {
   return ciPath;
 };
 
-// 🧠 Safe npm runner that works on Windows, Linux, and GitHub CI
 function runNpmStart(cwd: string, extraEnv: Record<string, string> = {}) {
   const isWindows = os.platform() === "win32";
 
-  let npmCmd = "npm";
-  try {
-    npmCmd = execSync(isWindows ? "where npm" : "which npm")
-      .toString()
-      .trim()
-      .split("\n")[0];
-  } catch {
-    console.warn("⚠️ Could not resolve npm path, falling back to 'npx npm'");
-    npmCmd = "npx npm";
-  }
+  // Resolve npm CLI entrypoint
+  const npmCli = require.resolve("npm/bin/npm-cli.js");
+  const nodePath = process.execPath; // exact Node binary being used by Playwright
 
-  console.log(`🧠 Running "${npmCmd} start" in ${cwd}`);
+  console.log(`🧠 Running "npm start" in ${cwd} (direct node spawn)`);
 
-  const child = spawn(npmCmd, ["start"], {
+  const child = spawn(nodePath, [npmCli, "start"], {
     cwd,
-    shell: true, // safer cross-platform spawning
     env: {
       ...process.env,
       ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
+    shell: false, // ⬅️ critical: don't use a shell
   });
 
   child.stdout?.on("data", (d) => process.stdout.write(`[${path.basename(cwd)}] ${d}`));
