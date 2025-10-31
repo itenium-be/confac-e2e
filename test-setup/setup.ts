@@ -9,10 +9,10 @@ let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  const localPath = path.resolve(__dirname, "../confac");
+  const localPath = path.resolve(__dirname, "../../confac");
   const ciPath = "/confac";
 
-  if (fs.existsSync(localPath)) {
+  if (fs.existsSync(path.join(localPath, "backend"))) {
     console.log(`🧩 Using local confac path: ${localPath}`);
     return localPath;
   }
@@ -20,13 +20,8 @@ const getAppPath = () => {
   console.log(`🧩 Using CI confac path: ${ciPath}`);
   return ciPath;
 };
-
 async function globalSetup(config: FullConfig) {
-
-const appPath = getAppPath();
-console.log(`🧩 Using confac app path: ${appPath}`);
-console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backend")));
-
+  const appPath = getAppPath();
 
   // --- Mongo configuration ---
   const mongoPort = process.env.MONGO_PORT || "27017";
@@ -61,6 +56,7 @@ console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backe
   backendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "backend"),
     stdio: ["ignore", "pipe", "pipe"],
+    shell: true,
     env: {
       ...process.env,
       MONGO_HOST: process.env.MONGO_HOST,
@@ -82,6 +78,7 @@ console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backe
     const seed = spawn("node", ["./faker/index.js"], {
       cwd: path.join(appPath, "backend/public"),
       env: { ...process.env, MONGODB_URI: mongoUrl },
+      shell: true,
     });
     seed.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Seed failed"))));
   });
@@ -91,6 +88,7 @@ console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backe
   frontendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "frontend"),
     stdio: ["ignore", "pipe", "pipe"],
+    shell: true,
     env: {
       ...process.env,
       PORT: "3000",
