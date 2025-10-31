@@ -25,10 +25,11 @@ const getAppPath = () => {
 
 // 🧠 Helper to spawn npm commands cross-platform
 function runNpmStart(cwd: string, extraEnv: Record<string, string> = {}) {
-  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
-  console.log(`🧠 Running "${npmCmd} start" in ${cwd}`);
+  const nodePath = process.execPath; // the exact node binary in this environment
+  const npmCli = require.resolve("npm/bin/npm-cli.js");
+  console.log(`🧠 Running "npm start" in ${cwd}`);
 
-  const child = spawn(npmCmd, ["start"], {
+  const child = spawn(nodePath, [npmCli, "start"], {
     cwd,
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, ...extraEnv },
@@ -45,6 +46,7 @@ function runNpmStart(cwd: string, extraEnv: Record<string, string> = {}) {
 
   return child;
 }
+
 
 async function globalSetup(config: FullConfig) {
   const appPath = getAppPath();
