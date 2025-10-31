@@ -9,25 +9,21 @@ let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  const confacPath = process.env.CONFAC_APP_PATH
-    ? process.env.CONFAC_APP_PATH
-    : path.resolve(__dirname, "../../confac");
+  const candidate = path.resolve(__dirname, "../../../confac"); // one level higher
+  if (fs.existsSync(candidate)) {
+    return candidate;
+  }
 
-  return path.resolve(confacPath);
+  // fallback for local dev (monorepo)
+  return path.resolve(__dirname, "../../confac");
 };
 
 async function globalSetup(config: FullConfig) {
 
-console.log("🧭 Debugging environment...");
-console.log("Node version:", process.version);
-console.log("Current working directory:", process.cwd());
-console.log("PATH:", process.env.PATH);
-console.log("Backend directory exists?", fs.existsSync(path.join(getAppPath(), "backend")));
-console.log("npm location:", require("child_process").execSync("which npm").toString());
+const appPath = getAppPath();
+console.log(`🧩 Using confac app path: ${appPath}`);
+console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backend")));
 
-
-  const appPath = getAppPath();
-  console.log(`🧩 Using confac app path: ${appPath}`);
 
   // --- Mongo configuration ---
   const mongoPort = process.env.MONGO_PORT || "27017";
