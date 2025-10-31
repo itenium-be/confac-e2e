@@ -43,7 +43,7 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-              - name: Debug workspace layout
+      - name: Debug workspace layout
         run: |
           echo "🧭 Current working directory:"
           pwd
