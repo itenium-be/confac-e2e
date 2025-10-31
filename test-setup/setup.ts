@@ -1,5 +1,5 @@
 import { GenericContainer, StartedTestContainer, Wait } from "testcontainers";
-import { ChildProcess, spawn, execSync } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import os from "os";
@@ -9,7 +9,7 @@ let mongoContainer: StartedTestContainer | null = null;
 let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
-// 🔍 Determine app path (local vs CI)
+// Detect app path (local vs CI)
 const getAppPath = () => {
   const localPath = path.resolve(__dirname, "../../confac");
   const ciPath = "/confac";
@@ -23,49 +23,34 @@ const getAppPath = () => {
   return ciPath;
 };
 
+// Run `npm start` in a cross-platform way (works in CI)
 function runNpmStart(cwd: string, extraEnv: Record<string, string> = {}) {
-  const isWindows = os.platform() === "win32";
+  const nodePath = process.execPath; // this Node binary always exists
+  const npmCli = path.join(path.dirname(nodePath), "../lib/node_modules/npm/bin/npm-cli.js");
 
-  // Try to find the npm binary via system path
-  let npmPath: string;
-  try {
-    npmPath = execSync(isWindows ? "where npm" : "which npm")
-      .toString()
-      .split("\n")[0]
-      .trim();
-  } catch {
-    console.warn("⚠️ Could not locate npm in PATH, falling back to plain 'npm'");
-    npmPath = "npm";
-  }
+  console.log(`🧠 Running "node ${npmCli} start" in ${cwd}`);
 
-  console.log(`🧠 Running "${npmPath} start" in ${cwd}`);
-
-  const child = spawn(npmPath, ["start"], {
+  const child = spawn(nodePath, [npmCli, "start"], {
     cwd,
-    env: {
-      ...process.env,
-      ...extraEnv,
-    },
+    env: { ...process.env, ...extraEnv },
     stdio: ["ignore", "pipe", "pipe"],
-    shell: false, // 👈 critical — don’t use /bin/sh
   });
 
-  // Mirror logs to CI output
   child.stdout?.on("data", (d) => process.stdout.write(`[${path.basename(cwd)}] ${d}`));
   child.stderr?.on("data", (d) => process.stderr.write(`[${path.basename(cwd)}:ERR] ${d}`));
 
-  // Handle spawn failures
   child.on("error", (err) => {
     console.error(`❌ Failed to start npm in ${cwd}:`, err);
   });
 
   return child;
 }
+
 async function globalSetup(config: FullConfig) {
   const appPath = getAppPath();
 
   try {
-    // --- Mongo configuration ---
+    // Start Mongo
     const mongoUser = process.env.MONGO_USERNAME || "admin";
     const mongoPass = process.env.MONGO_PASSWORD || "pwd";
     const mongoDb = process.env.MONGO_DB || "confac";
@@ -84,29 +69,27 @@ async function globalSetup(config: FullConfig) {
 
     const mappedPort = mongoContainer.getMappedPort(27017);
     const mongoUrl = `mongodb://${mongoUser}:${mongoPass}@${mongoContainer.getHost()}:${mappedPort}/${mongoDb}?authSource=admin`;
-    process.env.MONGODB_URI = mongoUrl;
 
+    process.env.MONGODB_URI = mongoUrl;
     console.log(`✅ MongoDB container started at ${mongoUrl}`);
 
-    // --- Start backend ---
+    // Start backend & frontend
     console.log("🚀 Starting backend...");
     backendProcess = runNpmStart(path.join(appPath, "backend"), {
       MONGODB_URI: mongoUrl,
       PORT: "9000",
     });
 
-    // --- Start frontend ---
     console.log("🚀 Starting frontend...");
     frontendProcess = runNpmStart(path.join(appPath, "frontend"), {
       PORT: "3000",
       BACKEND_URL: "http://localhost:9000",
     });
 
-    // --- Wait for both apps to be ready ---
     console.log("⏳ Waiting for services to be ready...");
-    await new Promise((resolve) => setTimeout(resolve, 15_000));
+    await new Promise((resolve) => setTimeout(resolve, 20_000));
 
-    // --- Save runtime info ---
+    // Record runtime
     fs.writeFileSync(
       path.resolve(__dirname, "runtime.json"),
       JSON.stringify({
