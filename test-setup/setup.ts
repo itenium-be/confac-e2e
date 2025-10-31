@@ -9,9 +9,11 @@ let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  return process.env.CONFAC_APP_PATH
+  const confacPath = process.env.CONFAC_APP_PATH
     ? process.env.CONFAC_APP_PATH
     : path.resolve(__dirname, "../../confac");
+
+  return path.resolve(confacPath);
 };
 
 async function globalSetup(config: FullConfig) {
@@ -53,7 +55,6 @@ async function globalSetup(config: FullConfig) {
   backendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "backend"),
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
     env: {
       ...process.env,
       MONGO_HOST: process.env.MONGO_HOST,
@@ -73,7 +74,6 @@ async function globalSetup(config: FullConfig) {
   await new Promise<void>((resolve, reject) => {
     const seed = spawn("node", ["./faker/index.js"], {
       cwd: path.join(appPath, "backend/public"),
-      shell: true,
       env: { ...process.env, MONGODB_URI: mongoUrl },
     });
     seed.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Seed failed"))));
@@ -84,7 +84,6 @@ async function globalSetup(config: FullConfig) {
   frontendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "frontend"),
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
     env: {
       ...process.env,
       PORT: "3000",
