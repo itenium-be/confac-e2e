@@ -75,6 +75,7 @@ console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backe
   backendProcess.stdout?.pipe(fs.createWriteStream("./backend.log"));
   backendProcess.stderr?.pipe(fs.createWriteStream("./backend.log"));
 
+  /*
   // --- Seed DB ---
   console.log("🌱 Seeding database...");
   await new Promise<void>((resolve, reject) => {
@@ -84,7 +85,7 @@ console.log("Backend directory exists?", fs.existsSync(path.join(appPath, "backe
     });
     seed.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Seed failed"))));
   });
-
+*/
   // --- Start frontend ---
   console.log("🚀 Starting frontend...");
   frontendProcess = spawn("npm", ["start"], {
