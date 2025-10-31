@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: itenium-be/confac
-          path: confac
+          path: ../confac
 
       - uses: actions/setup-node@v4
         with:
@@ -42,33 +42,6 @@ jobs:
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-
-      - name: Debug workspace layout
-        run: |
-          echo "🧭 Current working directory:"
-          pwd
-          echo
-          
-          echo "📁 List all files from root of workspace:"
-          ls -R -la
-          echo
-
-          echo "📦 Check where confac repo landed:"
-          ls -la confac || echo "confac directory not found"
-          echo
-
-          echo "📦 Check backend and frontend folders if they exist:"
-          ls -la confac/backend || echo "backend directory not found"
-          ls -la confac/frontend || echo "frontend directory not found"
-          echo
-
-          echo "🔍 Which npm binary is being used:"
-          which npm || echo "npm not found in PATH"
-          echo
-
-          echo "🧩 Node version:"
-          node -v
-
 
       - name: Run Playwright tests
         run: npx playwright test
