@@ -9,13 +9,13 @@ let backendProcess: ChildProcess | null = null;
 let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  const candidate = path.resolve(__dirname, "../../../confac"); // one level higher
+  const candidate = path.resolve(__dirname, "../confac"); // one level higher
   if (fs.existsSync(candidate)) {
     return candidate;
   }
 
   // fallback for local dev (monorepo)
-  return path.resolve(__dirname, "../../confac");
+  return path.resolve(__dirname, "../confac");
 };
 
 async function globalSetup(config: FullConfig) {
