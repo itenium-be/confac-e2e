@@ -1,85 +1,113 @@
 import { GenericContainer, StartedTestContainer, Wait } from "testcontainers";
 import { ChildProcess, spawn } from "child_process";
 import path from "path";
+import fs from "fs";
+import { FullConfig } from "@playwright/test";
 
-let mongoContainer: StartedTestContainer;
-let backendProcess: ChildProcess;
-let frontendProcess: ChildProcess;
-let seedProcess: ChildProcess;
+let mongoContainer: StartedTestContainer | null = null;
+let backendProcess: ChildProcess | null = null;
+let frontendProcess: ChildProcess | null = null;
 
 const getAppPath = () => {
-  if (process.env.CONFAC_APP_PATH) {
-    return process.env.CONFAC_APP_PATH;
-  }
-  return path.resolve(__dirname, "../../../confac");
+  return process.env.CONFAC_APP_PATH
+    ? process.env.CONFAC_APP_PATH
+    : path.resolve(__dirname, "../../confac");
 };
 
-export async function setupTestEnvironment() {
+async function globalSetup(config: FullConfig) {
+
+
   const appPath = getAppPath();
-  console.log(`Using confac app path: ${appPath}`);
-  mongoContainer = await new GenericContainer("mongo:latest")
-    .withExposedPorts(27017)
-    .withEnvironment({
-      MONGO_INITDB_DATABASE: "confac",
-      MONGO_INITDB_ROOT_USERNAME: process.env.MONGO_USERNAME?.toString() || "",
-      MONGO_INITDB_ROOT_PASSWORD: process.env.MONGO_PASSWORD?.toString() || "",
-    })
-    .withStartupTimeout(120000)
-    .withWaitStrategy(Wait.forLogMessage("Waiting for connections"))
-    /*.withLogConsumer(stream => {
-      stream.on("data", (line: Buffer) => console.log(`MongoDB: ${line.toString().trim()}`));
-    })*/
-    .start();
-  console.log(
-    `MongoDB started at mongodb://${mongoContainer.getHost()}:${mongoContainer.getMappedPort(
-      27017
-    )}`
-  );
+  console.log(`🧩 Using confac app path: ${appPath}`);
 
-  const mongoPort = mongoContainer.getMappedPort(27017);
-  const mongoUrl = `mongodb://${mongoContainer.getHost()}:${mongoPort}/confac`;
+  // --- Mongo configuration ---
+  const mongoPort = process.env.MONGO_PORT || "27017";
+  const mongoUser = process.env.MONGO_USERNAME || "admin";
+  const mongoPass = process.env.MONGO_PASSWORD || "pwd";
+  const mongoDb = process.env.MONGO_DB || "confac";
 
-  console.log("Starting Backend process");
+  let mongoUrl: string;
+   console.log("🧱 Starting MongoDB in Testcontainers...");
+    mongoContainer = await new GenericContainer("mongo:latest")
+      .withExposedPorts(27017)
+      .withEnvironment({
+        MONGO_INITDB_DATABASE: mongoDb,
+        MONGO_INITDB_ROOT_USERNAME: mongoUser,
+        MONGO_INITDB_ROOT_PASSWORD: mongoPass,
+      })
+      .withStartupTimeout(120_000)
+      .withWaitStrategy(Wait.forLogMessage("Waiting for connections"))
+      .start();
 
+    const mappedPort = mongoContainer.getMappedPort(27017);
+    mongoUrl = `mongodb://${mongoUser}:${mongoPass}@${mongoContainer.getHost()}:${mappedPort}/${mongoDb}?authSource=admin`;
+
+    process.env.MONGO_HOST = mongoContainer.getHost();
+    process.env.MONGO_PORT = mappedPort.toString();
+    process.env.MONGODB_URI = mongoUrl;
+
+    console.log(`✅ MongoDB container started at ${mongoUrl}`);
+
+  // --- Start backend ---
+  console.log("🚀 Starting backend...");
   backendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "backend"),
-    stdio: ["inherit", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe"],
     shell: true,
     env: {
       ...process.env,
+      MONGO_HOST: process.env.MONGO_HOST,
+      MONGO_PORT: process.env.MONGO_PORT,
+      MONGO_USERNAME: process.env.MONGO_USERNAME,
+      MONGO_PASSWORD: process.env.MONGO_PASSWORD,
+      MONGO_DB: process.env.MONGO_DB,
       MONGODB_URI: mongoUrl,
-      MONGO_PORT: mongoPort.toString(),
+      PORT: "9000",
     },
   });
-  console.log("Backend process started");
-  console.log("Starting seed process");
+  backendProcess.stdout?.pipe(fs.createWriteStream("./backend.log"));
+  backendProcess.stderr?.pipe(fs.createWriteStream("./backend.log"));
 
-  seedProcess = spawn("cd backend/public && node ./faker/index.j", {
-    shell: true,
-    stdio: "inherit",
-    env: process.env,
+  // --- Seed DB ---
+  console.log("🌱 Seeding database...");
+  await new Promise<void>((resolve, reject) => {
+    const seed = spawn("node", ["./faker/index.js"], {
+      cwd: path.join(appPath, "backend/public"),
+      shell: true,
+      env: { ...process.env, MONGODB_URI: mongoUrl },
+    });
+    seed.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Seed failed"))));
   });
-  console.log("Seed process finished");
 
-  console.log("Frontend process started");
-
+  // --- Start frontend ---
+  console.log("🚀 Starting frontend...");
   frontendProcess = spawn("npm", ["start"], {
     cwd: path.join(appPath, "frontend"),
-    //stdio: ['inherit', 'pipe', 'pipe']
+    stdio: ["ignore", "pipe", "pipe"],
     shell: true,
+    env: {
+      ...process.env,
+      PORT: "3000",
+      BACKEND_URL: "http://localhost:4000",
+    },
   });
-  console.log("Frontend process started");
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  frontendProcess.stdout?.pipe(fs.createWriteStream("./frontend.log"));
+  frontendProcess.stderr?.pipe(fs.createWriteStream("./frontend.log"));
+
+  // --- Wait for app startup ---
+  console.log("⏳ Waiting for services to be ready...");
+  await new Promise((r) => setTimeout(r, 10_000));
+
+  fs.writeFileSync(
+    path.resolve(__dirname, "runtime.json"),
+    JSON.stringify({
+      mongoId: mongoContainer ? mongoContainer.getId() : null,
+      backendPid: backendProcess?.pid ?? null,
+      frontendPid: frontendProcess?.pid ?? null,
+    }),
+  );
+
+  console.log("✅ Test environment ready.");
 }
 
-export async function teardownTestEnvironment() {
-  if (mongoContainer) {
-    await mongoContainer.stop();
-  }
-  if (backendProcess) {
-    backendProcess.kill();
-  }
-  if (frontendProcess) {
-    frontendProcess.kill();
-  }
-}
+export default globalSetup;

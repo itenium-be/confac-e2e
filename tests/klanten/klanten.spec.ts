@@ -1,26 +1,13 @@
 import { test, expect } from "@playwright/test";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-} from "../../test-setup/setup";
 
 import { KlantenPage } from "../../src/pages/Klanten/KlantenPage";
 import { CreateKlantPage } from "../../src/pages/Klanten/CreateKlantPage";
 import { klantTypes } from "../../src/enum/klantTypes";
-import { AlphaNumericHelper } from "../../src/utils/helpers/AlphaNumericHelper"
-
-
+import { AlphaNumericHelper } from "../../src/utils/helpers/AlphaNumericHelper";
+import { KlantApi } from "../../src/utils/API/KlantApi";
 
 let klantenPage: KlantenPage;
 let createKlantPage: CreateKlantPage;
-
-test.beforeAll(async () => {
-  await setupTestEnvironment();
-});
-
-test.afterAll(async () => {
-  await teardownTestEnvironment();
-});
 
 test.beforeEach(async ({ page }) => {
   klantenPage = new KlantenPage(page);
@@ -34,10 +21,14 @@ test("klant toevoegen", async ({ page }) => {
 
   await createKlantPage.btwNummerInvullen(AlphaNumericHelper.randomBtw());
   await createKlantPage.ClickKlantVerderAanvullen();
-  await createKlantPage.klantNaamInvullen("test" + AlphaNumericHelper.randomName());
+  await createKlantPage.klantNaamInvullen(
+    "test" + AlphaNumericHelper.randomName()
+  );
   //await createKlantPage.btwInvullen("btw nummer"); --skipping as it is already pre filled here
   await createKlantPage.typeDropdownSelecteren(klantTypes.Eindklant);
-  await createKlantPage.straatEnNummerInvullen(AlphaNumericHelper.randomStraat() + AlphaNumericHelper.randomNumeric(1));
+  await createKlantPage.straatEnNummerInvullen(
+    AlphaNumericHelper.randomStraat() + AlphaNumericHelper.randomNumeric(1)
+  );
   await createKlantPage.postcodeInvullen(AlphaNumericHelper.randomNumeric(4));
   await createKlantPage.stadInvullen("stad");
   await createKlantPage.landDropdownSelecteren("België");
@@ -52,8 +43,12 @@ test("klant toevoegen", async ({ page }) => {
   expect(response.status()).toBe(200);
 });
 
-test("klant zoeken", async ({ page }) => {
-  let klantNaam = "Wyman LLC";
+test("klant zoeken", async ({ page, request }) => {
+  let klantNaam = "search klant";
+
+  await KlantApi.safeCreateKlant(request, {
+    name: klantNaam + AlphaNumericHelper.randomAlpha(4),
+  });
   await klantenPage.goto();
 
   await klantenPage.search(klantNaam);
@@ -61,8 +56,13 @@ test("klant zoeken", async ({ page }) => {
   expect(await klantenPage.klantExists(klantNaam)).toBeTruthy();
 });
 
-test("klant verwijderen", async ({ page }) => {
-  let klantNaam = "Wyman LLC";
+test("klant verwijderen", async ({ page, request }) => {
+  let klantNaam = "search klant";
+
+  await KlantApi.safeCreateKlant(request, {
+    name: klantNaam + AlphaNumericHelper.randomAlpha(4),
+  });
+
   await klantenPage.goto();
 
   await klantenPage.getKlantRowbyName(klantNaam).then(async (row) => {
@@ -72,12 +72,16 @@ test("klant verwijderen", async ({ page }) => {
   expect(await klantenPage.klantExists(klantNaam)).toBeFalsy();
 });
 
-test("klant aanpassen", async ({ page }) => {
-  let klantNaam = "test";
+test("klant aanpassen", async ({ page, request }) => {
+  let klantNaam = "search klant";
+
+  await KlantApi.safeCreateKlant(request, {
+    name: klantNaam + AlphaNumericHelper.randomAlpha(4),
+  });
   let updatedKlantNaam = "aangepaste klant naam";
   await klantenPage.goto();
 
-  await klantenPage.search(klantNaam)
+  await klantenPage.search(klantNaam);
   await klantenPage.getKlantRowbyName(klantNaam).then(async (row) => {
     await klantenPage.editKlant(row);
   });
@@ -88,5 +92,3 @@ test("klant aanpassen", async ({ page }) => {
 
   expect(await klantenPage.klantExists(updatedKlantNaam)).toBeTruthy();
 });
-
-

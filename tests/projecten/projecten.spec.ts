@@ -1,8 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-} from "../../test-setup/setup";
+
 import { ProjectenPage } from "../../src/pages/projecten/ProjectenPage";
 import { CreateProjectenPage } from "../../src/pages/projecten/CreateProjectenPage";
 import { KlantApi } from "../../src/utils/API/KlantApi";
@@ -14,13 +11,6 @@ import { ProjectApi } from "../../src/utils/API/PrjectAPI";
 let projectenPage: ProjectenPage;
 let createProjectenPage: CreateProjectenPage;
 
-test.beforeAll(async () => {
-  await setupTestEnvironment();
-});
-
-test.afterAll(async () => {
-  await teardownTestEnvironment();
-});
 
 test.beforeEach(async ({ page }) => {
   projectenPage = new ProjectenPage(page);
@@ -73,8 +63,7 @@ test("Project aanpassen", async ({ page, request }) => {
   let user = "e2e-test-user";
 
   await KlantApi.safeCreateKlant(request, { name: klant });
-    await KlantApi.safeCreateKlant(request, { name: klant2 });
-
+  await KlantApi.safeCreateKlant(request, { name: klant2 });
   await ConsultantApi.safeCreateConsultant(request, { name: consultant });
   await UserApi.safeCreateUser(request);
   await ProjectApi.create(request, {

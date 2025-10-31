@@ -1,18 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { ConsultantsPage } from "../../../src/pages/projecten/ConsultantsPage";
 import { CreateConsultantsPage } from "../../../src/pages/projecten/CreateConsultantsPage";
-import { setupTestEnvironment, teardownTestEnvironment } from "../../../test-setup/setup";
 
 let consultantsPage: ConsultantsPage;
 let createConsultantsPage: CreateConsultantsPage;
 
-test.beforeAll(async () => {
-  await setupTestEnvironment();
-});
-
-test.afterAll(async () => {
-  await teardownTestEnvironment();
-});
 
 test.beforeEach(async ({ page }) => {
   consultantsPage = new ConsultantsPage(page);
