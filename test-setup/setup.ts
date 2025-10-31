@@ -26,28 +26,41 @@ const getAppPath = () => {
 function runNpmStart(cwd: string, extraEnv: Record<string, string> = {}) {
   const isWindows = os.platform() === "win32";
 
-  // Resolve npm CLI entrypoint
-  const npmCli = require.resolve("npm/bin/npm-cli.js");
-  const nodePath = process.execPath; // exact Node binary being used by Playwright
+  // Try to find the npm binary via system path
+  let npmPath: string;
+  try {
+    npmPath = execSync(isWindows ? "where npm" : "which npm")
+      .toString()
+      .split("\n")[0]
+      .trim();
+  } catch {
+    console.warn("⚠️ Could not locate npm in PATH, falling back to plain 'npm'");
+    npmPath = "npm";
+  }
 
-  console.log(`🧠 Running "npm start" in ${cwd} (direct node spawn)`);
+  console.log(`🧠 Running "${npmPath} start" in ${cwd}`);
 
-  const child = spawn(nodePath, [npmCli, "start"], {
+  const child = spawn(npmPath, ["start"], {
     cwd,
     env: {
       ...process.env,
       ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
-    shell: false, // ⬅️ critical: don't use a shell
+    shell: false, // 👈 critical — don’t use /bin/sh
   });
 
+  // Mirror logs to CI output
   child.stdout?.on("data", (d) => process.stdout.write(`[${path.basename(cwd)}] ${d}`));
   child.stderr?.on("data", (d) => process.stderr.write(`[${path.basename(cwd)}:ERR] ${d}`));
 
+  // Handle spawn failures
+  child.on("error", (err) => {
+    console.error(`❌ Failed to start npm in ${cwd}:`, err);
+  });
+
   return child;
 }
-
 async function globalSetup(config: FullConfig) {
   const appPath = getAppPath();
 
